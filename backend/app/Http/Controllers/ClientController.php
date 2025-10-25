@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Interfaces\ClientRepositoryInterface;
+use App\Traits\RequestResponseTrait;
 use Illuminate\Http\Request;
+use Throwable;
 
 class ClientController extends Controller
 {
+    use RequestResponseTrait;
+    
     protected $clients;
 
     public function __construct(ClientRepositoryInterface $clients)
@@ -16,6 +20,11 @@ class ClientController extends Controller
     
     public function index(Request $request)
     {
-        return response()->json($this->clients->getClients($request));
+        try {
+            $clients = $this->clients->getClients($request);
+            return $this->successJsonResponse('Clients fetched successfully.', $clients);
+        } catch (Throwable $error) {
+            return $this->exceptionJsonResponse($error, 'clients');
+        }
     }
 }
