@@ -2,9 +2,14 @@
 
 namespace App\Repositories;
 
+use App\Imports\ImportClients;
 use App\Interfaces\ClientRepositoryInterface;
 use App\Models\Client;
+use App\Models\ImportFailure;
+use App\Models\ImportStatus;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
 
 class ClientRepository implements ClientRepositoryInterface
 {
@@ -27,5 +32,39 @@ class ClientRepository implements ClientRepositoryInterface
         }
 
         return $query->orderBy('id', 'desc')->paginate(20);
+    }
+
+    public function importClients($file)
+    {
+        $importId = (string) Str::uuid();
+        
+        ImportStatus::Create([
+            'import_id' => $importId,
+            'status' => 'queued'
+        ]);
+
+        Excel::queueImport(new ImportClients($importId), $file);
+        
+        return [
+            'message' => 'Import queued successfully.', 
+            'import_id' => $importId,
+            'check_failures_url' => route('clients.import.status', $importId)
+        ];
+
+    }
+
+    public function importStatus($importId)
+    {
+        $status = ImportStatus::where('import_id', $importId)->first();
+        $failures = ImportFailure::where('import_id', $importId)->get();
+
+        return [
+            'status' => $status ? $status->status : 'unknown',
+            'failures' => $failures,
+            'summary' => [
+                'total_failures' => $failures->count(),
+                'import_id' => $importId
+            ]
+        ];
     }
 }
