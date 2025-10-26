@@ -79,4 +79,14 @@ class ClientController extends Controller
             return $this->exceptionJsonResponse($error, 'clients');
         }
     }
+    
+    public function destroy($id)
+    {
+        try {
+            $result = $this->clients->deleteClient($id);
+            return $this->successJsonResponse('Client deleted successfully.', $result);
+        } catch (Throwable $error) {
+            return $this->exceptionJsonResponse($error, 'clients');
+        }
+    }
 }
