@@ -3,12 +3,12 @@
 namespace App\Exports;
 
 use App\Models\Client;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class ExportClients implements FromCollection, WithHeadings, ShouldAutoSize, ShouldQueue
+class ExportClients implements FromQuery, WithHeadings, ShouldAutoSize, WithChunkReading
 {
     protected string $type;
 
@@ -20,20 +20,18 @@ class ExportClients implements FromCollection, WithHeadings, ShouldAutoSize, Sho
     /**
     * @return \Illuminate\Support\Collection
     */
-    public function collection()
+    public function query()
     {
-        $query = Client::query();
-
-        if ($this->type === 'duplicate') {
-            $query->where('is_duplicate', true);
-        } elseif ($this->type === 'unique') {
-            $query->where('is_duplicate', false);
-        }
-        return $query->select('company_name', 'email', 'phone_number')->get();
+        return Client::filterByType($this->type)->select('company_name', 'email', 'phone_number');
     }
 
     public function headings(): array
     {
         return ['Company Name', 'Email', 'Phone Number'];
+    }
+
+    public function chunkSize(): int
+    {
+        return config('excel.exports.chunk_size', 1000);
     }
 }
