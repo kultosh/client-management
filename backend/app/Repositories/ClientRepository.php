@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Exports\ExportClients;
 use App\Imports\ImportClients;
 use App\Interfaces\ClientRepositoryInterface;
 use App\Jobs\FinalizeImportStatusJob;
@@ -69,5 +70,11 @@ class ClientRepository implements ClientRepositoryInterface
                 'import_id' => $importId
             ]
         ];
+    }
+
+    public function exportClients($type)
+    {
+        $filename = 'clients_' . $type . '_' . now()->format('Y_m_d_H_i_s') . '.csv';
+        return Excel::download(new ExportClients($type), $filename);
     }
 }
