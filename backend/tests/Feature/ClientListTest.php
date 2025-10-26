@@ -29,7 +29,7 @@ class ClientListTest extends TestCase
         Client::factory()->create(['is_duplicate' => 1]);
         Client::factory()->create(['is_duplicate' => 0]);
 
-        $response = $this->getJson('/api/clients?filter=duplicates');
+        $response = $this->getJson('/api/clients?filter=duplicate');
         $this->assertApiSuccess($response, 2);
         $this->assertAllClientsAreDuplicates($response);
     }
@@ -112,7 +112,7 @@ class ClientListTest extends TestCase
             'is_duplicate' => 0
         ]);
         
-        $response = $this->getJson('/api/clients?search=Apple&filter=duplicates');
+        $response = $this->getJson('/api/clients?search=Apple&filter=duplicate');
         $this->assertApiSuccess($response, 1);
         
         $data = $this->getApiData($response);
