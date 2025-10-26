@@ -44,7 +44,7 @@ class ClientController extends Controller
         } catch (ValidationException $e) {
             $failures = $e->failures();
             return $this->errorJsonResponse('File validation failed before queueing.', ['failures' => $failures], 422);
-        } catch (\Throwable $error) {
+        } catch (Throwable $error) {
             return $this->exceptionJsonResponse($error, 'clients');
         }
     }
@@ -55,6 +55,15 @@ class ClientController extends Controller
             $result = $this->clients->importStatus($importId);
             return $this->successJsonResponse('Import status retrieved successfully.', $result);
 
+        } catch (Throwable $error) {
+            return $this->exceptionJsonResponse($error, 'clients');
+        }
+    }
+
+    public function export(Request $request)
+    {
+        try {
+            return $this->clients->exportClients($request->query('type', 'all'));
         } catch (Throwable $error) {
             return $this->exceptionJsonResponse($error, 'clients');
         }
