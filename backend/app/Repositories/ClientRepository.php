@@ -71,4 +71,45 @@ class ClientRepository implements ClientRepositoryInterface
         $filename = 'clients_' . $type . '_' . now()->format('Y_m_d_H_i_s') . '.csv';
         return Excel::download(new ExportClients($type), $filename);
     }
+
+    public function updateClient(array $data, int $id)
+    {
+        $client = Client::findOrFail($id);
+        $client->fill($data); // Fill the model but dont save
+        $needsDuplicateCheck = $client->isDirty(['company_name', 'email', 'phone_number']); // Check if duplicate fields changed before saving
+        $client->save();
+        
+        // Only run duplicate logic if fields actually changed
+        if ($needsDuplicateCheck) {
+            $this->verifyUpdateOnDuplicates($client);
+        }
+        
+        return $client;
+    }
+
+    private function verifyUpdateOnDuplicates(Client $client)
+    {
+        $hasDuplicates = Client::where('id', '!=', $client->id)
+            ->where('company_name', $client->company_name)
+            ->where('email', $client->email)
+            ->where('phone_number', $client->phone_number)
+            ->exists();
+        
+        if ($hasDuplicates) {
+            $client->is_duplicate = true;
+            // Get Group ID only if needed
+            $existingGroup = Client::where('company_name', $client->company_name)
+                ->where('email', $client->email)
+                ->where('phone_number', $client->phone_number)
+                ->whereNotNull('duplicate_group_id')
+                ->value('duplicate_group_id');
+                
+            $client->duplicate_group_id = $existingGroup ?? Str::uuid();
+        } else {
+            $client->is_duplicate = false;
+            $client->duplicate_group_id = null;
+        }
+        
+        $client->save();
+    }
 }
