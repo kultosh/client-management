@@ -17,6 +17,16 @@ trait RequestResponseTrait
         ], $code);
     }
 
+    public function errorJsonResponse($message, $data=null, $code=400)
+    {
+        return response()->json([
+            'code' => $code,
+            'status' => 'error',
+            'message' => $message,
+            'content' => $data
+        ], $code);
+    }
+
     public function exceptionJsonResponse(Throwable $exception, $logChannelType="single", $code = 500)
     {
         Log::channel($logChannelType)->error("API Exception", [
