@@ -97,6 +97,6 @@ class ImportClients implements ToModel, WithHeadingRow, WithChunkReading, Should
     // Define chunk size
     public function chunkSize(): int
     {
-        return 1000;
+        return config('excel.imports.chunk_size', 1000);
     }
 }
