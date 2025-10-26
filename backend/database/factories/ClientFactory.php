@@ -27,4 +27,14 @@ class ClientFactory extends Factory
             'duplicate_group_id' => null,
         ];
     }
+
+    public function duplicate()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'is_duplicate' => true,
+                'duplicate_group_id' => \Illuminate\Support\Str::uuid(),
+            ];
+        });
+    }
 }
