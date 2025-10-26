@@ -9,4 +9,5 @@ Route::group(['prefix' => 'clients'], function () {
     Route::get('imports/{importId}/status', [ClientController::class, 'getImportStatus'])->name('clients.import.status');
     Route::get('/export', [ClientController::class, 'export']);
     Route::put('/{id}', [ClientController::class, 'update']);
+    Route::delete('/{id}', [ClientController::class, 'destroy']);
 });
