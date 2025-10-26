@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Imports\ImportClients;
 use App\Interfaces\ClientRepositoryInterface;
+use App\Jobs\FinalizeImportStatusJob;
 use App\Models\Client;
 use App\Models\ImportFailure;
 use App\Models\ImportStatus;
@@ -43,7 +44,9 @@ class ClientRepository implements ClientRepositoryInterface
             'status' => 'queued'
         ]);
 
-        Excel::queueImport(new ImportClients($importId), $file);
+        Excel::queueImport(new ImportClients($importId), $file)->chain([
+            new FinalizeImportStatusJob($importId),
+        ]);
         
         return [
             'message' => 'Import queued successfully.', 
