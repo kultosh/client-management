@@ -17,13 +17,7 @@ class ClientRepository implements ClientRepositoryInterface
 {
     public function getClients(Request $request)
     {
-        $query = Client::query();
-
-        if ($request->has('filter') && $request->filter === 'duplicates') {
-            $query->where('is_duplicate', true);
-        } elseif ($request->has('filter') && $request->filter === 'unique') {
-            $query->where('is_duplicate', false);
-        }
+        $query = Client::query()->filterByType($request->filter);
 
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
