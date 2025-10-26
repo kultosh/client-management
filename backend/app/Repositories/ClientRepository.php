@@ -112,4 +112,30 @@ class ClientRepository implements ClientRepositoryInterface
         
         $client->save();
     }
+
+    public function deleteClient(int $id)
+    {
+        $client = Client::findOrFail($id);
+        $duplicateGroupId = $client->duplicate_group_id;
+        $client->delete();
+        
+        // After deletion, check if any duplicates remain that need status update
+        if($duplicateGroupId) {
+            $this->verifyDeleteOnDuplicates($duplicateGroupId);
+        }
+        
+        return ['deleted_id' => $id];
+    }
+
+    private function verifyDeleteOnDuplicates($delDuplicateGroupId)
+    {
+        $remainingClients = Client::where('duplicate_group_id', $delDuplicateGroupId)->get();
+
+        if ($remainingClients->count() === 1) {
+            $remainingClient = $remainingClients->first();
+            $remainingClient->is_duplicate = false;
+            $remainingClient->duplicate_group_id = null;
+            $remainingClient->save();
+        }
+    }
 }
