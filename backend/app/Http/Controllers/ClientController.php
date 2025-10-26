@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ClientRequest;
 use App\Interfaces\ClientRepositoryInterface;
 use App\Traits\RequestResponseTrait;
 use Illuminate\Http\Request;
@@ -64,6 +65,16 @@ class ClientController extends Controller
     {
         try {
             return $this->clients->exportClients($request->query('type', 'all'));
+        } catch (Throwable $error) {
+            return $this->exceptionJsonResponse($error, 'clients');
+        }
+    }
+
+    public function update(ClientRequest $request, $id)
+    {
+        try {
+            $result = $this->clients->updateClient($request->validated(), $id);
+            return $this->successJsonResponse('Client updated successfully.', $result);
         } catch (Throwable $error) {
             return $this->exceptionJsonResponse($error, 'clients');
         }

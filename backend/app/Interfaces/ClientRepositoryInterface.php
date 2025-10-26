@@ -10,4 +10,5 @@ interface ClientRepositoryInterface
     public function importClients($file);
     public function importStatus($importId);
     public function exportClients($type);
+    public function updateClient(array $data, int $id);
 }
