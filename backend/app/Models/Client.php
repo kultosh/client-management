@@ -11,6 +11,10 @@ class Client extends Model
     
     protected $fillable = ['company_name','email','phone_number','is_duplicate','duplicate_group_id'];
 
+    protected $casts = [
+        'is_duplicate' => 'boolean',
+    ];
+
     public function scopeFilterByType($query, $type)
     {
         return match($type) {
