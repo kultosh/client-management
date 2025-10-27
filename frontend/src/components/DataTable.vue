@@ -7,6 +7,7 @@
             <th>Company Name</th>
             <th>Email</th>
             <th>Phone Number</th>
+            <th>Duplicate</th>
             <th>Actions</th>
         </tr>
       </thead>
@@ -16,9 +17,10 @@
             <td>{{ client.company_name }}</td>
             <td>{{ client.email }}</td>
             <td>{{ client.phone_number }}</td>
+            <td>{{ client.is_duplicate ? "YES" : "NO" }}</td>
             <td>
-            <button type="button" class="btn btn-sm btn-primary me-2">Edit</button>
-            <button type="button" class="btn btn-sm btn-danger">Delete</button>
+            <button type="button" class="btn btn-sm btn-primary me-2" @click="editClient(client)">Edit</button>
+            <button type="button" class="btn btn-sm btn-danger" @click="deleteClient(client)">Delete</button>
             </td>
         </tr>
       </tbody>
@@ -135,6 +137,12 @@ export default {
         this.$emit("page-changed", page);
       }
     },
+    editClient(client) {
+      this.$emit("edit-client", client);
+    },
+    deleteClient(client) {
+      this.$emit("delete-client", client);
+    }
   },
 };
 </script>

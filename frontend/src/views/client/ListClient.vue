@@ -44,7 +44,7 @@
         </div>
       </div>
       <div class="card-body">
-        <DataTable :clients="clients" :pagination="pagination" @page-changed="fetchClients" :loading="isLoading" />
+        <DataTable :clients="clients" :pagination="pagination" @page-changed="fetchClients" :loading="isLoading" @edit-client="handleEditClient" @delete-client="handleDeleteClient" />
       </div>
     </div>
 
@@ -56,18 +56,48 @@
       @close="closeImportModal"
       @refresh-status="checkImportStatus"
     />
+
+    <!-- Edit Client Modal -->
+    <EditClientModal 
+      :show="showEditModal" 
+      :client="selectedClient"
+      :updating="updatingClient"
+      @close="closeEditModal"
+      @update-client="updateClient"
+    />
+
+    <!-- Delete Confirmation Modal -->
+    <DeleteConfirmationModal 
+      :show="showDeleteModal" 
+      :client="selectedClient"
+      :deleting="deletingClient"
+      @close="closeDeleteModal"
+      @confirm-delete="confirmDelete"
+    />
+
+    <!-- Toast Notifications -->
+    <ToastNotification 
+      :toasts="toasts"
+      @remove-toast="removeToast"
+    />
   </div>
 </template>
 
 <script>
 import DataTable from "../../components/DataTable.vue";
 import ImportModal from "../../components/ImportModal.vue";
-import { getClients, importClients, getImportStatus, exportClients } from '@/services/client';
+import EditClientModal from "../../components/EditClientModal.vue";
+import DeleteConfirmationModal from "../../components/DeleteConfirmationModal.vue";
+import ToastNotification from "../../components/ToastNotification.vue";
+import { getClients, importClients, getImportStatus, exportClients, updateClient, deleteClient } from '@/services/client';
 
 export default {
   components: {
     DataTable,
-    ImportModal
+    ImportModal,
+    EditClientModal,
+    DeleteConfirmationModal,
+    ToastNotification
   },
   data() {
     return {
@@ -90,7 +120,20 @@ export default {
       
       // Export related data
       selectedExportType: 'Export',
-      exporting: false
+      exporting: false,
+
+      // Edit related data
+      showEditModal: false,
+      selectedClient: null,
+      updatingClient: false,
+
+      // Delete related data
+      showDeleteModal: false,
+      deletingClient: false,
+
+      // Toast notifications
+      toasts: [],
+      toastId: 0
     };
   },
   computed: {
@@ -283,13 +326,100 @@ export default {
         })
         .catch(error => {
           console.error('Export failed:', error);
-          alert('Export failed. Please try again.');
+          this.showToast('error', 'Export Failed', 'Failed to export clients. Please try again.');
         })
         .finally(() => {
           this.exporting = false;
           // Reset the select to the placeholder after export
           this.selectedExportType = 'Export';
         });
+    },
+
+    // Edit Methods
+    handleEditClient(client) {
+      this.selectedClient = client;
+      this.showEditModal = true;
+    },
+
+    closeEditModal() {
+      this.showEditModal = false;
+      this.selectedClient = null;
+      this.updatingClient = false;
+    },
+
+    updateClient(formData) {
+      if (!this.selectedClient) return;
+      this.updatingClient = true;
+
+      updateClient(this.selectedClient.id, formData)
+        .then(response => {
+          const data = response.data;
+          if (data.code === 200) {
+            this.showToast('success', 'Success', 'Client updated successfully!');
+            this.closeEditModal();
+            this.fetchClients(this.pagination.current_page);
+          }
+        })
+        .catch(error => {
+          console.error('Update failed:', error);
+          this.showToast('error', 'Update Failed', 'Failed to update client. Please try again.');
+        })
+        .finally(() => {
+          this.updatingClient = false;
+        });
+    },
+
+    // Delete Methods
+    handleDeleteClient(client) {
+      this.selectedClient = client;
+      this.showDeleteModal = true;
+    },
+
+    closeDeleteModal() {
+      this.showDeleteModal = false;
+      this.selectedClient = null;
+      this.deletingClient = false;
+    },
+
+    confirmDelete() {
+      if (!this.selectedClient) return;
+      this.deletingClient = true;
+
+      deleteClient(this.selectedClient.id)
+        .then(response => {
+          const data = response.data;
+          if (data.code === 200) {
+            this.showToast('success', 'Success', 'Client deleted successfully!');
+            this.closeDeleteModal();
+            this.fetchClients(this.pagination.current_page);
+          }
+        })
+        .catch(error => {
+          console.error('Delete failed:', error);
+          this.showToast('error', 'Delete Failed', 'Failed to delete client. Please try again.');
+        })
+        .finally(() => {
+          this.deletingClient = false;
+        });
+    },
+
+    // Toast Methods
+    showToast(type, title, message) {
+      const toast = {
+        id: ++this.toastId,
+        type,
+        title,
+        message,
+        time: new Date().toLocaleTimeString()
+      };
+      
+      this.toasts.push(toast);
+      setTimeout(() => {
+        this.removeToast(toast.id);
+      }, 5000);
+    },
+    removeToast(id) {
+      this.toasts = this.toasts.filter(toast => toast.id !== id);
     }
   }
 };
