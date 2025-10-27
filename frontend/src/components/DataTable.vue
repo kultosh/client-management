@@ -10,7 +10,7 @@
             <th>Actions</th>
         </tr>
       </thead>
-      <tbody v-if="clients.length">
+      <tbody v-if="clients.length && !loading">
         <tr v-for="client in clients" :key="client.id">
             <td>{{ client.id }}</td>
             <td>{{ client.company_name }}</td>
@@ -22,6 +22,17 @@
             </td>
         </tr>
       </tbody>
+      <tbody v-else-if="loading">
+        <tr>
+          <td colspan="5">
+            <div class="d-flex justify-content-center w-100 py-4">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
       <tbody v-else>
         <tr>
           <td colspan="5"><div class="d-flex justify-content-center w-100">No Data</div></td>
@@ -30,7 +41,7 @@
     </table>
 
     <!-- Pagination -->
-    <nav v-if="pagination && totalPages > 1">
+    <nav v-if="pagination && totalPages > 1 && !loading">
       <ul class="pagination justify-content-center">
         <li class="page-item" :class="{ disabled: currentPage === 1 }">
           <button class="page-link" @click="changePage(currentPage - 1)" :disabled="currentPage === 1">Previous</button>
@@ -89,6 +100,10 @@ export default {
       type: Object,
       required: true,
     },
+    loading: {
+      type: Boolean,
+      default: false
+    }
   },
   data() {
     return {}
