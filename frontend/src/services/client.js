@@ -21,9 +21,12 @@ export function getImportStatus(importId) {
   return axios.get(`${API_URL}/imports/${importId}/status`);
 }
 
-// EXPORT clients usually returns a file
-export function exportClients() {
-  return axios.get(`${API_URL}/export`, { responseType: 'blob' });
+// EXPORT clients
+export function exportClients(type = 'all') {
+  return axios.get(`${API_URL}/export`, { 
+    responseType: 'blob',
+    params: { type }
+  });
 }
 
 // UPDATE a client
