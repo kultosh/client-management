@@ -28,7 +28,14 @@
             <button class="btn btn-outline-success me-2" @click="triggerFileInput">Import</button>
           </div>
           
-          <select class="form-select" aria-label="Export">
+          <!-- Export Section -->
+          <select 
+            class="form-select" 
+            aria-label="Export" 
+            v-model="selectedExportType"
+            @change="handleExport"
+            :disabled="exporting"
+          >
             <option selected disabled>Export</option>
             <option value="all">All</option>
             <option value="unique">Unique</option>
@@ -55,7 +62,7 @@
 <script>
 import DataTable from "../../components/DataTable.vue";
 import ImportModal from "../../components/ImportModal.vue";
-import { getClients, importClients, getImportStatus } from '@/services/client';
+import { getClients, importClients, getImportStatus, exportClients } from '@/services/client';
 
 export default {
   components: {
@@ -79,7 +86,11 @@ export default {
       importData: null,
       showImportModal: false,
       importStatus: '',
-      refreshingStatus: false
+      refreshingStatus: false,
+      
+      // Export related data
+      selectedExportType: 'Export',
+      exporting: false
     };
   },
   computed: {
@@ -231,6 +242,54 @@ export default {
       
       // Refresh client list when modal closes and show loader
       this.fetchClients();
+    },
+
+    // Export Methods
+    handleExport(event) {
+      const exportType = event.target.value;
+      
+      if (exportType === 'Export') return;
+      
+      this.exporting = true;
+      
+      exportClients(exportType)
+        .then(response => {
+          // Create a blob from the response data
+          const blob = new Blob([response.data], { 
+            type: response.headers['content-type'] 
+          });
+          
+          // Create download link
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          
+          // Get filename from content-disposition header or use default
+          const contentDisposition = response.headers['content-disposition'];
+          let filename = `clients_${exportType}_${new Date().toISOString().split('T')[0]}.csv`;
+          
+          if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+            if (filenameMatch && filenameMatch.length === 2) {
+              filename = filenameMatch[1];
+            }
+          }
+          
+          link.setAttribute('download', filename);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+          console.error('Export failed:', error);
+          alert('Export failed. Please try again.');
+        })
+        .finally(() => {
+          this.exporting = false;
+          // Reset the select to the placeholder after export
+          this.selectedExportType = 'Export';
+        });
     }
   }
 };
