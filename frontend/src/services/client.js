@@ -9,7 +9,11 @@ export function getClients(params = {}) {
 
 // IMPORT clients (file upload)
 export function importClients(formData) {
-  return axios.post(`${API_URL}/import`, formData);
+  return axios.post(`${API_URL}/import`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
 }
 
 // CHECK import status
