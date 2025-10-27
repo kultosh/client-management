@@ -44,7 +44,7 @@
         </div>
       </div>
       <div class="card-body">
-        <DataTable :clients="clients" :pagination="pagination" @page-changed="fetchClients" :loading="isLoading" />
+        <DataTable :clients="clients" :pagination="pagination" @page-changed="fetchClients" :loading="isLoading" @edit-client="handleEditClient" />
       </div>
     </div>
 
@@ -56,18 +56,29 @@
       @close="closeImportModal"
       @refresh-status="checkImportStatus"
     />
+
+    <!-- Edit Client Modal -->
+    <EditClientModal 
+      :show="showEditModal" 
+      :client="selectedClient"
+      :updating="updatingClient"
+      @close="closeEditModal"
+      @update-client="updateClient"
+    />
   </div>
 </template>
 
 <script>
 import DataTable from "../../components/DataTable.vue";
 import ImportModal from "../../components/ImportModal.vue";
-import { getClients, importClients, getImportStatus, exportClients } from '@/services/client';
+import EditClientModal from "../../components/EditClientModal.vue";
+import { getClients, importClients, getImportStatus, exportClients, updateClient } from '@/services/client';
 
 export default {
   components: {
     DataTable,
-    ImportModal
+    ImportModal,
+    EditClientModal
   },
   data() {
     return {
@@ -90,7 +101,12 @@ export default {
       
       // Export related data
       selectedExportType: 'Export',
-      exporting: false
+      exporting: false,
+
+      // Edit related data
+      showEditModal: false,
+      selectedClient: null,
+      updatingClient: false
     };
   },
   computed: {
@@ -289,6 +305,39 @@ export default {
           this.exporting = false;
           // Reset the select to the placeholder after export
           this.selectedExportType = 'Export';
+        });
+    },
+
+    // Edit Methods
+    handleEditClient(client) {
+      this.selectedClient = client;
+      this.showEditModal = true;
+    },
+
+    closeEditModal() {
+      this.showEditModal = false;
+      this.selectedClient = null;
+      this.updatingClient = false;
+    },
+
+    updateClient(formData) {
+      if (!this.selectedClient) return;
+      this.updatingClient = true;
+
+      updateClient(this.selectedClient.id, formData)
+        .then(response => {
+          const data = response.data;
+          if (data.code === 200) {
+            this.closeEditModal();
+            this.fetchClients(this.pagination.current_page);
+          }
+        })
+        .catch(error => {
+          console.error('Update failed:', error);
+          alert('Failed to update client. Please try again.');
+        })
+        .finally(() => {
+          this.updatingClient = false;
         });
     }
   }
