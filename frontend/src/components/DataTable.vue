@@ -18,7 +18,7 @@
             <td>{{ client.phone_number }}</td>
             <td>
             <button type="button" class="btn btn-sm btn-primary me-2" @click="editClient(client)">Edit</button>
-            <button type="button" class="btn btn-sm btn-danger">Delete</button>
+            <button type="button" class="btn btn-sm btn-danger" @click="deleteClient(client)">Delete</button>
             </td>
         </tr>
       </tbody>
@@ -137,6 +137,9 @@ export default {
     },
     editClient(client) {
       this.$emit("edit-client", client);
+    },
+    deleteClient(client) {
+      this.$emit("delete-client", client);
     }
   },
 };
